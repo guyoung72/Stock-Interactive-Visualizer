@@ -2,6 +2,7 @@ import numpy as np
 # import pandas as pd
 import yfinance as yf
 import mplfinance as mpf
+import warnings
 
 # User Interaction program
 ticker_input = input("Stock Ticker: ")
@@ -19,8 +20,8 @@ def ma(input_data, period):
             ma_list.append(np.NAN)
         else:
             ma_list.append(round(np.nanmean(close[i - period + 1: i + 1]), 2))
-    input_data['MA %s' % (period)] = ma_list
-    return input_data['MA %s' % (period)]
+    input_data['MA %s' % period] = ma_list
+    return input_data['MA %s' % period]
 
 
 # Exponential Moving Average (EMA)
@@ -35,10 +36,50 @@ def ema(input_data, period, smoothing):
         else:
             ema_list.append(round((close[i] * (smoothing / (1 + period)))
                                   + ema_list[-1] * (1 - (smoothing / (1 + period))), 2))
-    input_data['EMA %s' %(period)] = ema_list
-    return input_data['EMA %s' %(period)]
+    input_data['EMA %s' % period] = ema_list
+    return input_data['EMA %s' % period]
 
 
-apd = [mpf.make_addplot(ema(data, 9, 2)), mpf.make_addplot(ema(data, 21, 2))]
+# Fast Stochastic %K
+def stoch_k(input_data, period):
+    stoch_list = []
+    close = input_data['Close'].to_list()
+    for i in range(len(close)):
+        if i < period - 1:
+            stoch_list.append(np.NAN)
+        else:
+            last_close = close[i - 1]
+            max_close = np.nanmax(input_data['High'].to_list()[i - period + 1: i + 1])
+            min_close = np.nanmin(input_data['Low'].to_list()[i - period + 1: i + 1])
+            stoch_list.append(round((last_close - min_close)/(max_close - min_close), 2))
+    input_data['Stochastic Fast (%s)' % period] = stoch_list
+    return input_data['Stochastic Fast (%s)' % period]
+
+
+# Slow Stochastic %D
+def stoch_d(input_data, period, length):
+    stoch_k_list = []
+    stoch_d_list = []
+    close = input_data['Close'].to_list()
+    for i in range(len(close)):
+        if i < period - 1:
+            stoch_k_list.append(np.NAN)
+        else:
+            last_close = close[i - 1]
+            max_close = np.nanmax(input_data['High'].to_list()[i - period + 1: i + 1])
+            min_close = np.nanmin(input_data['Low'].to_list()[i - period + 1: i + 1])
+            stoch_k_list.append(round((last_close - min_close)/(max_close - min_close), 2))
+    for j in range(len(stoch_k_list)):
+        if j < length - 1:
+            stoch_d_list.append(np.NAN)
+        else:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                stoch_d_list.append(round(np.nanmean(stoch_k_list[j - length + 1: j+1]), 2))
+    input_data['Stochastic Slow (%s,%s)' % (period, length)] = stoch_d_list
+    return input_data['Stochastic Slow (%s,%s)' % (period, length)]
+
+
+apd = [mpf.make_addplot(ema(data, 9, 2)), mpf.make_addplot(ema(data, 21, 2)),
+       mpf.make_addplot(stoch_k(data, 14), panel=1), mpf.make_addplot(stoch_d(data, 14, 3), panel=1)]
 mpf.plot(data, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd)
-

@@ -1,44 +1,31 @@
 import numpy as np
-# import pandas as pd
+import pandas as pd
 import yfinance as yf
-import mplfinance as mpf
+import plotly.graph_objs as go
 
 # User Interaction program
 ticker_input = input("Stock Ticker: ")
 ticker_input = ticker_input.upper()
-period_input = input("")
 
-data = yf.download(tickers=ticker_input, period="3d", interval="5m")
+data = yf.download(tickers=ticker_input, period="3y", interval="1d")
 
+fig = go.Figure()
+fig.add_trace(go.Candlestick())
+fig.add_trace(go.Candlestick(x=data.index, open = data['Open'], high=data['High'], low=data['Low'], close=data['Close'], name = 'market data'))
 
-# Moving Average
-def ma(input_data, period):
-    ma_list = []
-    close = input_data['Close'].to_list()
-    for i in range(len(close)):
-        if i < period - 1:
-            ma_list.append(np.NAN)
-        else:
-            ma_list.append(round(np.nanmean(close[i - period + 1: i + 1]), 2))
-    input_data['MA %s' % (period)] = ma_list
-    return input_data['MA %s' % (period)]
+fig.update_layout(title = ticker_input + ' share price', yaxis_title = 'Stock Price (USD)')
 
+# fig.update_xaxes(
+# rangeslider_visible=True,
+# rangeselector=dict(
+# buttons=list([
+# dict(count=15, label='15m', step="minute", stepmode="backward"),
+# dict(count=45, label='45m', step="minute", stepmode="backward"),
+# dict(count=1, label='1h', step="hour", stepmode="backward"),
+# dict(count=6, label='6h', step="hour", stepmode="backward"),
+# dict(step="all")
+# ])
+# )
+# )
 
-# Exponential Moving Average (EMA)
-def ema(input_data, period, smoothing):
-    ema_list = []
-    close = input_data['Close'].to_list()
-    for i in range(len(close)):
-        if i < period - 1:
-            ema_list.append(np.NAN)
-        elif i == period - 1:
-            ema_list.append(round(np.nanmean(close[i - period + 1: i + 1]), 2))
-        else:
-            ema_list.append(round((close[i] * (smoothing / (1 + period)))
-                                  + ema_list[-1] * (1 - (smoothing / (1 + period))), 2))
-    input_data['EMA %s' %(period)] = ema_list
-    return input_data['EMA %s' %(period)]
-
-
-apd = [mpf.make_addplot(ema(data, 9, 2)), mpf.make_addplot(ema(data, 21, 2))]
-mpf.plot(data, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd)
+fig.show()

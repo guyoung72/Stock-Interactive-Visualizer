@@ -80,6 +80,35 @@ def stoch_d(input_data, period, length):
     return input_data['Stochastic Slow (%s,%s)' % (period, length)]
 
 
+# MACD
+def macd(input_data, fast, slow, fast_smoothing, slow_smoothing):
+    ema_fast = ema(input_data, fast, fast_smoothing).to_list()
+    ema_slow = ema(input_data, slow, slow_smoothing).to_list()
+    macd_list = []
+    for i in range(len(ema_fast)):
+        macd_list.append(ema_fast[i] - ema_slow[i])
+    input_data['MACD (%s,%s)' % (fast, slow)] = macd_list
+    return input_data['MACD (%s,%s)' % (fast, slow)]
+
+
+# Signal
+def signal(input_data, fast, slow, fast_smoothing, slow_smoothing, period, smoothing):
+    signal_list = []
+    macd_value = macd(input_data, fast, slow, fast_smoothing, slow_smoothing).to_list()
+    for i in range(len(macd_value)):
+        if i < slow + period - 2:
+            signal_list.append(np.NAN)
+        elif i == slow + period - 2:
+            signal_list.append(round(np.nanmean(macd_value[i - period + 1: i + 1]), 2))
+        else:
+            signal_list.append(round((macd_value[i] * (smoothing / (1 + period)))
+                                  + signal_list[-1] * (1 - (smoothing / (1 + period))), 2))
+    input_data['Signal %s' % period] = signal_list
+    return input_data['Signal %s' % period]
+
+
 apd = [mpf.make_addplot(ema(data, 9, 2)), mpf.make_addplot(ema(data, 21, 2)),
-       mpf.make_addplot(stoch_k(data, 14), panel=1), mpf.make_addplot(stoch_d(data, 14, 3), panel=1)]
+       mpf.make_addplot(stoch_k(data, 14), panel=1), mpf.make_addplot(stoch_d(data, 14, 3), panel=1),
+       mpf.make_addplot(macd(data, 13, 26, 2, 2), panel=2), mpf.make_addplot(signal(data, 13, 26, 2, 2, 9, 2), panel=2, color='orange')]
 mpf.plot(data, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd)
+

@@ -8,8 +8,8 @@ import warnings
 ticker_input = input("Stock Ticker: ")
 ticker_input = ticker_input.upper()
 
-data = yf.download(tickers=ticker_input, period="3d", interval="5m")
-
+data = yf.download(tickers=ticker_input, period="1d", interval="5m")
+data1 = yf.download(tickers=ticker_input, period="3d", interval="5m")
 
 # Moving Average
 def ma(input_data, period):
@@ -106,8 +106,14 @@ def signal(input_data, fast, slow, fast_smoothing, slow_smoothing, period, smoot
     input_data['Signal %s' % period] = signal_list
     return input_data['Signal %s' % period]
 
-
+'''
 apd = [mpf.make_addplot(ema(data, 9, 2)), mpf.make_addplot(ema(data, 21, 2)),
        mpf.make_addplot(stoch_k(data, 14), panel=1), mpf.make_addplot(stoch_d(data, 14, 3), panel=1),
        mpf.make_addplot(macd(data, 13, 26, 2, 2), panel=2), mpf.make_addplot(signal(data, 13, 26, 2, 2, 9, 2), panel=2, color='orange')]
 mpf.plot(data, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5))
+'''
+
+
+apd = [mpf.make_addplot(ema(data1, 9, 2)[-len(data):]), mpf.make_addplot(ema(data1, 21, 2)[-len(data):])]
+mpf.plot(data, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5))
+

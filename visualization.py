@@ -102,7 +102,7 @@ def signal(input_data, fast, slow, fast_smoothing, slow_smoothing, period, smoot
             signal_list.append(round(np.nanmean(macd_value[i - period + 1: i + 1]), 2))
         else:
             signal_list.append(round((macd_value[i] * (smoothing / (1 + period)))
-                                  + signal_list[-1] * (1 - (smoothing / (1 + period))), 2))
+                                     + signal_list[-1] * (1 - (smoothing / (1 + period))), 2))
     input_data['Signal %s' % period] = signal_list
     return input_data['Signal %s' % period]
 
@@ -110,5 +110,4 @@ def signal(input_data, fast, slow, fast_smoothing, slow_smoothing, period, smoot
 apd = [mpf.make_addplot(ema(data, 9, 2)), mpf.make_addplot(ema(data, 21, 2)),
        mpf.make_addplot(stoch_k(data, 14), panel=1), mpf.make_addplot(stoch_d(data, 14, 3), panel=1),
        mpf.make_addplot(macd(data, 13, 26, 2, 2), panel=2), mpf.make_addplot(signal(data, 13, 26, 2, 2, 9, 2), panel=2, color='orange')]
-mpf.plot(data, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd)
-
+mpf.plot(data, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5))

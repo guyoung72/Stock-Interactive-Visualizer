@@ -9,7 +9,8 @@ ticker_input = input("Stock Ticker: ")
 ticker_input = ticker_input.upper()
 
 data = yf.download(tickers=ticker_input, period="1d", interval="5m")
-data1 = yf.download(tickers=ticker_input, period="3d", interval="5m")
+data_3d5m = yf.download(tickers=ticker_input, period="3d", interval="5m")
+data_3d1d = yf.download(tickers=ticker_input, period="3d", interval="1d")
 
 # Moving Average
 def ma(input_data, period):
@@ -106,6 +107,15 @@ def signal(input_data, fast, slow, fast_smoothing, slow_smoothing, period, smoot
     input_data['Signal %s' % period] = signal_list
     return input_data['Signal %s' % period]
 
+# Previous day high
+def prev_high(input_data):
+    return round(input_data['High'].iloc[-1], 2)
+
+
+# Previous day low
+def prev_low(input_data):
+    return round(input_data['Low'].iloc[-1], 2)
+
 '''
 apd = [mpf.make_addplot(ema(data, 9, 2)), mpf.make_addplot(ema(data, 21, 2)),
        mpf.make_addplot(stoch_k(data, 14), panel=1), mpf.make_addplot(stoch_d(data, 14, 3), panel=1),
@@ -114,6 +124,6 @@ mpf.plot(data, type="candle", title=ticker_input + " Price", style="yahoo", addp
 '''
 
 
-apd = [mpf.make_addplot(ema(data1, 9, 2)[-len(data):]), mpf.make_addplot(ema(data1, 21, 2)[-len(data):])]
-mpf.plot(data, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5))
-
+apd = [mpf.make_addplot(ema(data_3d5m, 9, 2)[-len(data_3d5m):]), mpf.make_addplot(ema(data_3d5m, 21, 2)[-len(data_3d5m):])]
+mpf.plot(data_3d5m, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5),
+         hlines=dict(hlines=[prev_high(data_3d1d), prev_low(data_3d1d)]))

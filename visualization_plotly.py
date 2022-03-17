@@ -20,6 +20,7 @@ data_3d5m = yf.download(tickers=ticker_input, period="3d", interval="5m")
 data_3d1d = yf.download(tickers=ticker_input, period="3d", interval="1d")
 data_6mo1d = yf.download(tickers=ticker_input, period="6mo", interval="1d")
 
+
 # Draw figure
 fig = go.Figure(data=[go.Candlestick(x=data_6mo1d.index,
                                      open=data_6mo1d['Open'],

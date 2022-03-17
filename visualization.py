@@ -8,6 +8,11 @@ import warnings
 ticker_input = input("Stock Ticker: ")
 ticker_input = ticker_input.upper()
 
+"""
+Period = 1d, 3d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
+Interval = 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
+"""
+
 data = yf.download(tickers=ticker_input, period="1d", interval="5m")
 data_3d5m = yf.download(tickers=ticker_input, period="3d", interval="5m")
 data_3d1d = yf.download(tickers=ticker_input, period="3d", interval="1d")
@@ -117,13 +122,12 @@ def prev_low(input_data):
     return round(input_data['Low'].iloc[-1], 2)
 
 '''
-apd = [mpf.make_addplot(ema(data, 9, 2)), mpf.make_addplot(ema(data, 21, 2)),
-       mpf.make_addplot(stoch_k(data, 14), panel=1), mpf.make_addplot(stoch_d(data, 14, 3), panel=1),
-       mpf.make_addplot(macd(data, 13, 26, 2, 2), panel=2), mpf.make_addplot(signal(data, 13, 26, 2, 2, 9, 2), panel=2, color='orange')]
-mpf.plot(data, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5))
+apd = [mpf.make_addplot(ema(data_1d5m, 9, 2)), mpf.make_addplot(ema(data_1d5m, 21, 2)),
+       mpf.make_addplot(stoch_k(data_1d5m, 14), panel=1), mpf.make_addplot(stoch_d(data_1d5m, 14, 3), panel=1),
+       mpf.make_addplot(macd(data_1d5m, 13, 26, 2, 2), panel=2), mpf.make_addplot(signal(data_1d5m, 13, 26, 2, 2, 9, 2), panel=2, color='orange')]
+mpf.plot(data_1d5m, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5))
 '''
-
 
 apd = [mpf.make_addplot(ema(data_3d5m, 9, 2)[-len(data_3d5m):]), mpf.make_addplot(ema(data_3d5m, 21, 2)[-len(data_3d5m):])]
 mpf.plot(data_3d5m, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5),
-         hlines=dict(hlines=[prev_high(data_3d1d), prev_low(data_3d1d)]))
+         hlines=dict(hlines=[prev_high(data_3d1d), prev_low(data_3d1d)], colors=['pink', 'pink'], linestyle='--'))

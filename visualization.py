@@ -15,7 +15,10 @@ Interval = 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
 
 data = yf.download(tickers=ticker_input, period="1d", interval="5m")
 data_3d5m = yf.download(tickers=ticker_input, period="3d", interval="5m")
+data_5d5m = yf.download(tickers=ticker_input, period="5d", interval="5m")
 data_3d1d = yf.download(tickers=ticker_input, period="3d", interval="1d")
+data_3y1d = yf.download(tickers=ticker_input, period="3y", interval="1d")
+data_3y1wk = yf.download(tickers=ticker_input, period="3y", interval="1wk")
 
 # Moving Average
 def ma(input_data, period):
@@ -121,6 +124,40 @@ def prev_high(input_data):
 def prev_low(input_data):
     return round(input_data['Low'].iloc[-1], 2)
 
+
+# Weekly support/resistance
+def weekly_sr(yearly_data, charting_data):
+    sr_list = []
+    high_low_list = []
+    curr_max = max(charting_data['High'])
+    curr_min = min(charting_data['Low'])
+
+    # Fill list of high and lows
+    for i in range(len(yearly_data)):
+        high_low_list.append(yearly_data['High'][i])
+        high_low_list.append(yearly_data['Low'][i])
+
+    avg = sum(high_low_list) / len(high_low_list)
+
+    # High and low are most likely SR level
+    sr_list.append(max(high_low_list))
+    sr_list.append(min(high_low_list))
+
+    # Go over all high and lows to find redundant levels
+    for i in high_low_list:
+        count = 0
+        for j in high_low_list:
+            if abs(i-j) <= 0.01 * avg:
+                count += 1
+        if count >= 2:
+            sr_list.append(i)
+
+    # If SR levels are above or below the current levels, remove
+    #sr_list = list(filter(lambda x: (x < curr_max and x > curr_min), sr_list))
+
+    return sr_list
+
+
 '''
 apd = [mpf.make_addplot(ema(data_1d5m, 9, 2)), mpf.make_addplot(ema(data_1d5m, 21, 2)),
        mpf.make_addplot(stoch_k(data_1d5m, 14), panel=1), mpf.make_addplot(stoch_d(data_1d5m, 14, 3), panel=1),
@@ -128,6 +165,11 @@ apd = [mpf.make_addplot(ema(data_1d5m, 9, 2)), mpf.make_addplot(ema(data_1d5m, 2
 mpf.plot(data_1d5m, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5))
 '''
 
-apd = [mpf.make_addplot(ema(data_3d5m, 9, 2)[-len(data_3d5m):]), mpf.make_addplot(ema(data_3d5m, 21, 2)[-len(data_3d5m):])]
+
+# Additional indicators to add
+apd = [mpf.make_addplot(ema(data_3d5m, 9, 2)[-len(data_3d5m):]),
+       mpf.make_addplot(ema(data_3d5m, 21, 2)[-len(data_3d5m):])]
+
+
 mpf.plot(data_3d5m, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5),
-         hlines=dict(hlines=[prev_high(data_3d1d), prev_low(data_3d1d)], colors=['pink', 'pink'], linestyle='--'))
+         hlines=dict(hlines=weekly_sr(data_3y1wk, data_3d5m), colors=['#ff8fab'], linestyle='dotted'),)

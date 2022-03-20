@@ -16,6 +16,12 @@ with requests.Session() as c:
         # print(item)
         title=(item.find('div',attrs={'class':'BNeawe vvjwJb AP7Wnd'})).get_text()
         desc=(item.find('div',attrs={'class':'BNeawe s3v9rd AP7Wnd'})).get_text()
+        title=title.replace(",","")
+        title = title.replace("—", "")
+        title = title.replace("–", "")
+        desc=desc.replace(",", "")
+        desc = desc.replace("—", "")
+        desc = desc.replace("–", "")
         time=desc.split("·")[0]
         descript=desc.split("·")[1]
         # print(title)

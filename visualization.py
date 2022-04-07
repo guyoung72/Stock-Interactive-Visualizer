@@ -7,15 +7,19 @@ import warnings
 # User Interaction program
 ticker_input = input("Stock Ticker: ")
 ticker_input = ticker_input.upper()
+#interval_input = input("Choose time interval (1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo): ")
+#period_input = input("Choose period interval (1d, 3d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max): ")
 
 """
 Period = 1d, 3d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
 Interval = 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
 """
 
-data = yf.download(tickers=ticker_input, period="1d", interval="5m")
+#data = yf.download(tickers=ticker_input, period=period_input, interval=interval_input)
 data_3d5m = yf.download(tickers=ticker_input, period="3d", interval="5m")
+data_3d15m = yf.download(tickers=ticker_input, period="3d", interval="15m")
 data_5d5m = yf.download(tickers=ticker_input, period="5d", interval="5m")
+data_5d15m = yf.download(tickers=ticker_input, period="5d", interval="15m")
 data_3d1d = yf.download(tickers=ticker_input, period="3d", interval="1d")
 data_3y1d = yf.download(tickers=ticker_input, period="3y", interval="1d")
 data_3y1wk = yf.download(tickers=ticker_input, period="3y", interval="1wk")
@@ -115,6 +119,21 @@ def signal(input_data, fast, slow, fast_smoothing, slow_smoothing, period, smoot
     input_data['Signal %s' % period] = signal_list
     return input_data['Signal %s' % period]
 
+
+def bollinger_upper(input_data, length, stdev):
+    sma = ma(input_data, length)
+    std = input_data['Close'].rolling(length).std()
+
+    return sma + std*stdev
+
+
+def bollinger_lower(input_data, length, stdev):
+    sma = ma(input_data, length)
+    std = input_data['Close'].rolling(length).std()
+
+    return sma - std*stdev
+
+
 # Previous day high
 def prev_high(input_data):
     return round(input_data['High'].iloc[-1], 2)
@@ -125,51 +144,13 @@ def prev_low(input_data):
     return round(input_data['Low'].iloc[-1], 2)
 
 
-# Weekly support/resistance
-def weekly_sr(yearly_data, charting_data):
-    sr_list = []
-    high_low_list = []
-    curr_max = max(charting_data['High'])
-    curr_min = min(charting_data['Low'])
+# Example code containing all indicators
+"""apd = [mpf.make_addplot(ema(data_5d15m, 9, 2)[-len(data_3d15m):]), mpf.make_addplot(ema(data_5d15m, 21, 2)[-len(data_3d15m):]),
+       mpf.make_addplot(stoch_k(data_5d15m, 14)[-len(data_3d15m):], panel=1), mpf.make_addplot(stoch_d(data_5d15m, 14, 3)[-len(data_3d15m):], panel=1),
+       mpf.make_addplot(macd(data_5d15m, 13, 26, 2, 2)[-len(data_3d15m):], panel=2), mpf.make_addplot(signal(data_5d15m, 13, 26, 2, 2, 9, 2)[-len(data_3d15m):], panel=2, color='orange'),
+       mpf.make_addplot(ma(data_5d15m, 21)[-len(data_3d15m):]), mpf.make_addplot(bollinger_upper(data_5d15m, 21, 2)[-len(data_3d15m):]),
+       mpf.make_addplot(bollinger_lower(data_5d15m, 21, 2)[-len(data_3d15m):])]
 
-    # Fill list of high and lows
-    for i in range(len(yearly_data)):
-        high_low_list.append(yearly_data['High'][i])
-        high_low_list.append(yearly_data['Low'][i])
+mpf.plot(data_3d15m, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5),)"""
 
-    avg = sum(high_low_list) / len(high_low_list)
-
-    # High and low are most likely SR level
-    sr_list.append(max(high_low_list))
-    sr_list.append(min(high_low_list))
-
-    # Go over all high and lows to find redundant levels
-    for i in high_low_list:
-        count = 0
-        for j in high_low_list:
-            if abs(i-j) <= 0.01 * avg:
-                count += 1
-        if count >= 2:
-            sr_list.append(i)
-
-    # If SR levels are above or below the current levels, remove
-    #sr_list = list(filter(lambda x: (x < curr_max and x > curr_min), sr_list))
-
-    return sr_list
-
-
-'''
-apd = [mpf.make_addplot(ema(data_1d5m, 9, 2)), mpf.make_addplot(ema(data_1d5m, 21, 2)),
-       mpf.make_addplot(stoch_k(data_1d5m, 14), panel=1), mpf.make_addplot(stoch_d(data_1d5m, 14, 3), panel=1),
-       mpf.make_addplot(macd(data_1d5m, 13, 26, 2, 2), panel=2), mpf.make_addplot(signal(data_1d5m, 13, 26, 2, 2, 9, 2), panel=2, color='orange')]
-mpf.plot(data_1d5m, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5))
-'''
-
-
-# Additional indicators to add
-apd = [mpf.make_addplot(ema(data_3d5m, 9, 2)[-len(data_3d5m):]),
-       mpf.make_addplot(ema(data_3d5m, 21, 2)[-len(data_3d5m):])]
-
-
-mpf.plot(data_3d5m, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5),
-         hlines=dict(hlines=weekly_sr(data_3y1wk, data_3d5m), colors=['#ff8fab'], linestyle='dotted'),)
+# Plotting my trade setup

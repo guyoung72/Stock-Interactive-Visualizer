@@ -148,7 +148,7 @@ def prev_low(input_data):
 
 
 # Finding Support and Resistance
-def sr_levels(input_data):
+def weekly_sr(input_data):
     sr_list = []
     hloc_list = []
 
@@ -156,30 +156,36 @@ def sr_levels(input_data):
     for i in range(len(input_data)):
         hloc_list.append(input_data['High'][i])
         hloc_list.append(input_data['Low'][i])
-        """ hloc_list.append(input_data['Open'][i])
-        hloc_list.append(input_data['Close'][i])"""
 
     # Calculate the average of the hloc list
     rng = max(hloc_list)-min(hloc_list)
+
+    # high and low are likely to be a SR level
+    sr_list.append(max(hloc_list))
+    sr_list.append(min(hloc_list))
 
     # Go over all high and lows to find redundant levels
     for i in hloc_list:
         add = True
         count = 0
         for j in hloc_list:
-            if abs(i - j) <= 0.0005 * rng:
+            if i == j:
+                continue
+            elif abs(i - j) <= 0.0005 * rng:
                 count += 10
             elif abs(i - j) <= 0.001 * rng:
-                count += 0.5
+                count += 6
             elif abs(i - j) <= 0.003 * rng:
-                count += 0.3
+                count += 3
             elif abs(i - j) <= 0.005 * rng:
-                count += 0.1
+                count += 2
+            elif abs(i - j) <= 0.007 * rng:
+                count += 1
             elif abs(i - j) <= 0.01 * rng:
-                count += 0.05
+                count += 0.5
         if count >= 10:
             for k in sr_list:
-                if len(sr_list) == 0 or abs(k - i) > (rng * 0.05):
+                if len(sr_list) == 0 or abs(k - i) > (rng * 0.01):
                     continue
                 else:
                     add = False
@@ -196,7 +202,7 @@ apd = [mpf.make_addplot(ema(data_1mo30m, 9, 2)[-len(data_5d30m):], width=1), mpf
        mpf.make_addplot(ma(data_1mo30m, 21)[-len(data_5d30m):], width=1), mpf.make_addplot(bollinger_upper(data_1mo30m, 21, 2)[-len(data_5d30m):], width=1),
        mpf.make_addplot(bollinger_lower(data_1mo30m, 21, 2)[-len(data_5d30m):], width=1)]
 
-mpf.plot(data_5d30m, type="candle", title=ticker_input + " Price", style="yahoo", figsize=(20, 9.5),
-         hlines=dict(hlines=sr_levels(data_5d30m), colors=['#ff8fab'], linestyle='dotted'))
+mpf.plot(data_3y1wk, type="candle", title=ticker_input + " Price", style="yahoo", figsize=(20, 9.5),
+         hlines=dict(hlines=weekly_sr(data_3y1wk), colors=['#ff8fab'], linestyle='dotted'))
 
 # Plotting my trade setup

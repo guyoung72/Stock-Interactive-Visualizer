@@ -18,8 +18,11 @@ Interval = 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
 #data = yf.download(tickers=ticker_input, period=period_input, interval=interval_input)
 data_3d5m = yf.download(tickers=ticker_input, period="3d", interval="5m")
 data_3d15m = yf.download(tickers=ticker_input, period="3d", interval="15m")
+data_3d30m = yf.download(tickers=ticker_input, period="3d", interval="30m")
 data_5d5m = yf.download(tickers=ticker_input, period="5d", interval="5m")
 data_5d15m = yf.download(tickers=ticker_input, period="5d", interval="15m")
+data_5d30m = yf.download(tickers=ticker_input, period="5d", interval="30m")
+data_1mo30m = yf.download(tickers=ticker_input, period="1mo", interval="30m")
 data_3d1d = yf.download(tickers=ticker_input, period="3d", interval="1d")
 data_3y1d = yf.download(tickers=ticker_input, period="3y", interval="1d")
 data_3y1wk = yf.download(tickers=ticker_input, period="3y", interval="1wk")
@@ -144,13 +147,56 @@ def prev_low(input_data):
     return round(input_data['Low'].iloc[-1], 2)
 
 
-# Example code containing all indicators
-"""apd = [mpf.make_addplot(ema(data_5d15m, 9, 2)[-len(data_3d15m):]), mpf.make_addplot(ema(data_5d15m, 21, 2)[-len(data_3d15m):]),
-       mpf.make_addplot(stoch_k(data_5d15m, 14)[-len(data_3d15m):], panel=1), mpf.make_addplot(stoch_d(data_5d15m, 14, 3)[-len(data_3d15m):], panel=1),
-       mpf.make_addplot(macd(data_5d15m, 13, 26, 2, 2)[-len(data_3d15m):], panel=2), mpf.make_addplot(signal(data_5d15m, 13, 26, 2, 2, 9, 2)[-len(data_3d15m):], panel=2, color='orange'),
-       mpf.make_addplot(ma(data_5d15m, 21)[-len(data_3d15m):]), mpf.make_addplot(bollinger_upper(data_5d15m, 21, 2)[-len(data_3d15m):]),
-       mpf.make_addplot(bollinger_lower(data_5d15m, 21, 2)[-len(data_3d15m):])]
+# Finding Support and Resistance
+def sr_levels(input_data):
+    sr_list = []
+    hloc_list = []
 
-mpf.plot(data_3d15m, type="candle", title=ticker_input + " Price", style="yahoo", addplot=apd, figsize=(20, 9.5),)"""
+    # Fill list of hloc
+    for i in range(len(input_data)):
+        hloc_list.append(input_data['High'][i])
+        hloc_list.append(input_data['Low'][i])
+        """ hloc_list.append(input_data['Open'][i])
+        hloc_list.append(input_data['Close'][i])"""
+
+    # Calculate the average of the hloc list
+    rng = max(hloc_list)-min(hloc_list)
+
+    # Go over all high and lows to find redundant levels
+    for i in hloc_list:
+        add = True
+        count = 0
+        for j in hloc_list:
+            if abs(i - j) <= 0.0005 * rng:
+                count += 10
+            elif abs(i - j) <= 0.001 * rng:
+                count += 0.5
+            elif abs(i - j) <= 0.003 * rng:
+                count += 0.3
+            elif abs(i - j) <= 0.005 * rng:
+                count += 0.1
+            elif abs(i - j) <= 0.01 * rng:
+                count += 0.05
+        if count >= 10:
+            for k in sr_list:
+                if len(sr_list) == 0 or abs(k - i) > (rng * 0.05):
+                    continue
+                else:
+                    add = False
+                    break
+            if add:
+                sr_list.append(i)
+    sr_list.sort()
+    return sr_list
+
+# Example code containing all indicators
+apd = [mpf.make_addplot(ema(data_1mo30m, 9, 2)[-len(data_5d30m):], width=1), mpf.make_addplot(ema(data_1mo30m, 21, 2)[-len(data_5d30m):], width=1),
+       mpf.make_addplot(stoch_k(data_1mo30m, 14)[-len(data_5d30m):], panel=1), mpf.make_addplot(stoch_d(data_1mo30m, 14, 3)[-len(data_5d30m):], panel=1),
+       mpf.make_addplot(macd(data_1mo30m, 13, 26, 2, 2)[-len(data_5d30m):], panel=2), mpf.make_addplot(signal(data_1mo30m, 13, 26, 2, 2, 9, 2)[-len(data_5d30m):], panel=2, color='orange'),
+       mpf.make_addplot(ma(data_1mo30m, 21)[-len(data_5d30m):], width=1), mpf.make_addplot(bollinger_upper(data_1mo30m, 21, 2)[-len(data_5d30m):], width=1),
+       mpf.make_addplot(bollinger_lower(data_1mo30m, 21, 2)[-len(data_5d30m):], width=1)]
+
+mpf.plot(data_5d30m, type="candle", title=ticker_input + " Price", style="yahoo", figsize=(20, 9.5),
+         hlines=dict(hlines=sr_levels(data_5d30m), colors=['#ff8fab'], linestyle='dotted'))
 
 # Plotting my trade setup

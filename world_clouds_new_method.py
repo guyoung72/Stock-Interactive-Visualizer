@@ -7,9 +7,10 @@ from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 import matplotlib.pyplot as plt
 
 #구글 서치
-# keyword=input('Type Keyword:')
-topic="bitcoin" #keyword
-numResults=10
+keyword=input('Type keyword:')
+whatnumber=int(input("How many search results do you want to scrap? (100 is the default value):") or "100")
+topic=keyword
+numResults=whatnumber
 url ="https://www.google.com/search?q="+topic+"&tbm=nws&hl=en&num="+str(numResults)
 response = requests.get(url)
 #수프 html parser로 하기 (가끔 딴걸로 해야됨)
@@ -31,10 +32,15 @@ text = ''.join(descriptions)
 nlp = spacy.load("en_core_web_sm")
 doc = nlp(text)
 newText =''
+
+#stop_words 계속 add하기
+stop_words = ["will","announced","announces","launched","launches","inch","year","size","best","analysis","greetings","business","exit","now","today","according","feature","including","says","pick","report","say","said","official","offer","people","spoke","day","week","hour","month","days","hours"]\
+             +list(STOPWORDS)
+
 for word in doc:
  if word.pos_ in ['ADJ', 'NOUN']:
   newText = " ".join((newText, word.text.lower()))
-wordcloud = WordCloud(stopwords=STOPWORDS).generate(newText)
+wordcloud = WordCloud(stopwords=stop_words).generate(newText)
 
 #visualize
 plt.imshow(wordcloud, interpolation='bilinear')

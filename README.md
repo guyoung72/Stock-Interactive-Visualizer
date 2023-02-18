@@ -1,5 +1,5 @@
-# first_trading_proj
+# Stock Interactive Visualization
 
 This Github will include the following projects:
-1. Word clouds showing current news key words for each NASDAQ stock
-2. Trading bot (may need personal account)
+1. Interactive visualization charts of stocks using Yahoo Finance package
+2. Word clouds showing current news key words for each NASDAQ stock
